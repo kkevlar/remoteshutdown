@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.SystemColor;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -17,20 +19,28 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 
-public class ServerFrame extends JFrame {
+public class ServerFrame extends JFrame implements Runnable
+{
 
+	private static final String AUTOMATIC_SHUTDOWN = "Your device will shutdown automatically in ";
+	private static final String AUTOMATIC_TIMEOUT = "Remote shutdown will timeout in ";
 	private JPanel contentPane;
 	private JTextField textfield_port;
 	private JTextField textField_password;
 	private JTextField textField_timescale;
 	private JTextField textField_time;
 	private JTextField txtRemoteShutdownIs;
+	private long timeoutTime;
+	private boolean shutdown;
 
 
 	/**
 	 * Create the frame.
 	 */
-	public ServerFrame() {
+	public ServerFrame(String password, boolean timeoutIsShutdown, long timeoutInMillis) 
+	{
+		timeoutTime = timeoutInMillis;
+		shutdown = timeoutIsShutdown;
 		setResizable(false);
 		setTitle("Simple Remote Shutdown");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -89,12 +99,14 @@ public class ServerFrame extends JFrame {
 		panel_passwordinfo.add(panel_ckbox);
 		
 		JCheckBox chckbxShowPassword = new JCheckBox("Show Password?");
+		chckbxShowPassword.setEnabled(password != null);
 		panel_ckbox.add(chckbxShowPassword);
 		chckbxShowPassword.setFont(new Font("Calibri", Font.PLAIN, 16));
 		
 		JPanel panel_timescale = new JPanel();
 		FlowLayout flowLayout_1 = (FlowLayout) panel_timescale.getLayout();
 		flowLayout_1.setAlignment(FlowLayout.LEFT);
+		panel_timescale.setVisible(timeoutInMillis > 0);
 		panel_info.add(panel_timescale);
 		
 		JLabel lblPasswordValid = new JLabel("Password Valid:");
@@ -120,7 +132,10 @@ public class ServerFrame extends JFrame {
 		JPanel panel_time = new JPanel();
 		contentPane.add(panel_time, BorderLayout.SOUTH);
 		
-		JLabel lblRemoteShutdownWill = new JLabel("Your device will shutdown automatically in ");
+		String temp = AUTOMATIC_TIMEOUT;
+		if(timeoutIsShutdown)
+			temp = AUTOMATIC_SHUTDOWN;
+		JLabel lblRemoteShutdownWill = new JLabel(temp);
 		lblRemoteShutdownWill.setFont(new Font("Calibri", Font.BOLD, 18));
 		panel_time.add(lblRemoteShutdownWill);
 		
@@ -138,7 +153,52 @@ public class ServerFrame extends JFrame {
 		txtRemoteShutdownIs.setEditable(false);
 		txtRemoteShutdownIs.setColumns(13);
 		contentPane.add(txtRemoteShutdownIs, BorderLayout.NORTH);
+		if(timeoutInMillis > 0)
+		new Thread(this).start();
 		
+	}
+
+
+	@Override
+	public void run() 
+	{
+		long startTime = System.currentTimeMillis();
+		while (true)
+		{
+			if (startTime + timeoutTime < System.currentTimeMillis())
+			{
+				if (shutdown)
+					try {
+						RSServer.shutDown();
+					} catch (RuntimeException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				else
+					System.exit(0);
+			}
+			else
+			{
+				long millis = (startTime + timeoutTime) - System.currentTimeMillis();
+				String textUpdate = String.format("%02dh %02dm %02ds", 
+						TimeUnit.MILLISECONDS.toHours(millis),
+						TimeUnit.MILLISECONDS.toMinutes(millis) -  
+						TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), // The change is in this line
+						TimeUnit.MILLISECONDS.toSeconds(millis) - 
+						TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));  
+				txtRemoteShutdownIs.setText(textUpdate);
+				
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		
 	}
 
