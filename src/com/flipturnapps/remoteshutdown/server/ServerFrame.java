@@ -36,8 +36,9 @@ public class ServerFrame extends JFrame implements Runnable
 
 	/**
 	 * Create the frame.
+	 * @param dateAllowance 
 	 */
-	public ServerFrame(String password, boolean timeoutIsShutdown, long timeoutInMillis) 
+	public ServerFrame(String password, boolean timeoutIsShutdown, long timeoutInMillis, int port, int passLength, int dateAllowance) 
 	{
 		timeoutTime = timeoutInMillis;
 		shutdown = timeoutIsShutdown;
@@ -67,7 +68,7 @@ public class ServerFrame extends JFrame implements Runnable
 		textfield_port.setBorder(null);
 		textfield_port.setEditable(false);
 		textfield_port.setFont(new Font("Calibri", Font.PLAIN, 17));
-		textfield_port.setText("<port>");
+		textfield_port.setText(port + "");
 		textfield_port.setHorizontalAlignment(SwingConstants.LEFT);
 		panel_portinfo.add(textfield_port);
 		textfield_port.setColumns(7);
@@ -86,7 +87,12 @@ public class ServerFrame extends JFrame implements Runnable
 		
 		textField_password = new JTextField();
 		panel_passwordtoppanel.add(textField_password);
-		textField_password.setText("<password>");
+		String stars = "";
+		for(int i = 0; i < passLength; i++)
+		{
+			stars += "*";
+		}
+		textField_password.setText(stars);
 		textField_password.setHorizontalAlignment(SwingConstants.LEFT);
 		textField_password.setFont(new Font("Calibri", Font.PLAIN, 17));
 		textField_password.setEditable(false);
@@ -189,7 +195,7 @@ public class ServerFrame extends JFrame implements Runnable
 						TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), // The change is in this line
 						TimeUnit.MILLISECONDS.toSeconds(millis) - 
 						TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));  
-				txtRemoteShutdownIs.setText(textUpdate);
+				textField_time.setText(textUpdate);
 				
 			}
 			try {

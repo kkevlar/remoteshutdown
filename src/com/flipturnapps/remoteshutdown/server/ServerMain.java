@@ -20,6 +20,7 @@ public class ServerMain {
 	{
 		int port = Integer.parseInt(args[0]);
 		String password = args[1];
+		int passLength = password.length();
 		int dateAllowance = Integer.parseInt(args[2]);
 		boolean allowShowPassword = Boolean.parseBoolean(args[3]);
 		long timeout = Long.parseLong(args[4]);
@@ -42,7 +43,7 @@ public class ServerMain {
 		}
 		if (!allowShowPassword)
 			password = null;
-		ServerFrame frame = new ServerFrame(password, shutDownAfterTimeout, timeout);
+		ServerFrame frame = new ServerFrame(password, shutDownAfterTimeout, timeout, port, passLength, dateAllowance);
 		frame.setVisible(true);
 	}
 
