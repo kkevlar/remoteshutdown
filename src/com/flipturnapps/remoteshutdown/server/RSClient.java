@@ -1,6 +1,5 @@
 package com.flipturnapps.remoteshutdown.server;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -15,9 +14,20 @@ public class RSClient extends ClientData
 	public RSClient(Socket socket, KServer<?> server) throws IOException 
 	{
 		super(socket, server);
-		ip = socket.getInetAddress().getHostAddress().toString();
-		id = idCount++;
-		
+		setIp(socket.getInetAddress().getHostAddress().toString());
+		setId(idCount++);
+	}
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public String getIp() {
+		return ip;
+	}
+	public void setIp(String ip) {
+		this.ip = ip;
 	}
 
 }
