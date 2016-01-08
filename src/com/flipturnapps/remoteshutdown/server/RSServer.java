@@ -52,12 +52,12 @@ public class RSServer extends KServer<RSClient>
 	}
 	public static void shutDown() throws RuntimeException, IOException {
 	    String shutdownCommand;
-	    String operatingSystem = System.getProperty("os.name");
+	    String operatingSystem = System.getProperty("os.name").toLowerCase();
 
-	    if ("Linux".equals(operatingSystem) || "Mac OS X".equals(operatingSystem)) {
+	    if (operatingSystem.contains("nux") || operatingSystem.contains("mac")) {
 	        shutdownCommand = "shutdown -h now";
 	    }
-	    else if ("Windows".equals(operatingSystem)) {
+	    else if (operatingSystem.contains("win")) {
 	        shutdownCommand = "shutdown.exe -s -t 0";
 	    }
 	    else {
