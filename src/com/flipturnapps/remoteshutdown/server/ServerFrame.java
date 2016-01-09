@@ -29,7 +29,6 @@ public class ServerFrame extends JFrame implements Runnable, ItemListener
 	private JPanel contentPane;
 	private JTextField textfield_port;
 	private JTextField textField_password;
-	private JTextField textField_timescale;
 	private JTextField textField_time;
 	private JTextField txtRemoteShutdownIs;
 	private long timeoutTime;
@@ -38,13 +37,13 @@ public class ServerFrame extends JFrame implements Runnable, ItemListener
 	private String pass;
 	private int length;
 	private String stars;
+	private JTextArea textArea;
 
 
 	/**
 	 * Create the frame.
-	 * @param dateAllowance 
 	 */
-	public ServerFrame(String password, boolean timeoutIsShutdown, long timeoutInMillis, int port, int passLength, int dateAllowance) 
+	public ServerFrame(String password, boolean timeoutIsShutdown, long timeoutInMillis, int port, int passLength) 
 	{
 		pass = password;
 		length = passLength;
@@ -63,14 +62,7 @@ public class ServerFrame extends JFrame implements Runnable, ItemListener
 		{
 			stars += "*";
 		}
-		String timescaleText = "";
-		if(dateAllowance == 0)
-			timescaleText = "Today only";
-		else if(dateAllowance == 1)
-			timescaleText = "Tomorrow only";
-		else if(dateAllowance == 2)
-			timescaleText = "Today and Tomorrow";
-
+	
 		JPanel panel_info = new JPanel();
 		contentPane.add(panel_info, BorderLayout.WEST);
 		panel_info.setLayout(new BoxLayout(panel_info, BoxLayout.Y_AXIS));
@@ -125,30 +117,7 @@ public class ServerFrame extends JFrame implements Runnable, ItemListener
 		panel_ckbox.add(chckbxShowPassword);
 		chckbxShowPassword.setFont(new Font("Calibri", Font.PLAIN, 16));
 
-		JPanel panel = new JPanel();
-		FlowLayout flowLayout = (FlowLayout) panel.getLayout();
-		flowLayout.setAlignment(FlowLayout.LEFT);
-		panel_info.add(panel);
-
-		JPanel panel_timescale = new JPanel();
-		panel.add(panel_timescale);
-		panel_timescale.setVisible(timeoutInMillis > 0);
-		panel_timescale.setLayout(new BoxLayout(panel_timescale, BoxLayout.Y_AXIS));
-
-		JLabel lblPasswordValid = new JLabel("Password Valid:");
-		lblPasswordValid.setFont(new Font("Calibri", Font.BOLD, 19));
-		panel_timescale.add(lblPasswordValid);
-
-		textField_timescale = new JTextField();
-		textField_timescale.setHorizontalAlignment(SwingConstants.LEFT);
-		textField_timescale.setFont(new Font("Calibri", Font.PLAIN, 15));
-		textField_timescale.setEditable(false);
-		textField_timescale.setColumns(7);
-		textField_timescale.setBorder(null);
-		textField_timescale.setText(timescaleText);
-		panel_timescale.add(textField_timescale);
-
-		JTextArea textArea = new JTextArea();
+		textArea = new JTextArea();
 		textArea.setBackground(SystemColor.control);
 
 		JScrollPane scrollPane = new JScrollPane(textArea);
@@ -236,6 +205,12 @@ public class ServerFrame extends JFrame implements Runnable, ItemListener
 			textField_password.setText(pass);
 		else
 			textField_password.setText(stars);
+	}
+
+
+	public void output(String string)
+	{
+		textArea.append(string + "\n");
 	}
 
 }

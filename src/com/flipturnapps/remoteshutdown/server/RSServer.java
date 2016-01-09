@@ -10,12 +10,14 @@ public class RSServer extends KServer<RSClient>
 
 	private String pass1;
 	private String pass2;
+	private ServerFrame frame;
 
-	public RSServer(int port, String pass1, String pass2) throws IOException 
+	public RSServer(int port, String pass1, ServerFrame frame) throws IOException 
 	{
 		super(port);
 		this.pass1 = pass1;
 		this.pass2 = pass2;
+		this.frame = frame;
 	}
 
 	@Override
@@ -33,6 +35,7 @@ public class RSServer extends KServer<RSClient>
 	@Override
 	protected void newMessage(String message, RSClient client) 
 	{
+		frame.output("\"" + message + "\"");
 		if(message==null || message.equals(""))
 			return;
 		if(message.equals(pass1) || message.equals(pass2))
@@ -47,7 +50,7 @@ public class RSServer extends KServer<RSClient>
 	@Override
 	protected void newClient(RSClient data) 
 	{
-		// TODO Auto-generated method stub
+		frame.output("new Client");
 		
 	}
 	public static void shutDown() throws RuntimeException, IOException {

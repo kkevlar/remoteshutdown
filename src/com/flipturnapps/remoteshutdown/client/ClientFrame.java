@@ -99,10 +99,11 @@ public class ClientFrame extends JFrame implements ActionListener
 	public void actionPerformed(ActionEvent e) 
 	{
 		PasswordCreator creator = new PasswordCreator();
-		String pass  = creator.createPassword(textField_password.getText(), 0);
+		String pass  = creator.createPassword(textField_password.getText());
+		RSClient client = null;
 		try {
-			RSClient client = new RSClient(textField_ip.getText(), Integer.parseInt(textField_port.getText()));
-			client.sendMessage(pass);
+			client = new RSClient(textField_ip.getText(), Integer.parseInt(textField_port.getText()));
+			
 		} catch (NumberFormatException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -113,6 +114,13 @@ public class ClientFrame extends JFrame implements ActionListener
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		client.sendMessage(pass);
 		
 	}
 
