@@ -5,7 +5,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.SystemColor;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -178,12 +177,7 @@ public class ServerFrame extends JFrame implements Runnable, ItemListener
 			else
 			{
 				long millis = (startTime + timeoutTime) - System.currentTimeMillis();
-				String textUpdate = String.format("%02dh %02dm %02ds", 
-						TimeUnit.MILLISECONDS.toHours(millis),
-						TimeUnit.MILLISECONDS.toMinutes(millis) -  
-						TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), // The change is in this line
-						TimeUnit.MILLISECONDS.toSeconds(millis) - 
-						TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));  
+				String textUpdate = ServerMain.millisToHMS(millis);  
 				textField_time.setText(textUpdate);
 
 			}

@@ -35,19 +35,23 @@ import javax.swing.ButtonGroup;
 public class SetupFrame extends JFrame implements ActionListener, Runnable
 {
 
+	private static final int ID_CLOSE = 1;
+	private static final int ID_SHUTDOWN = 2;
 	private JPanel contentPane;
 	private JTextField textField_port;
 	private JTextField textField_password;
-	private JButton btnNewButton;
+	private JButton btnGo;
 	private JCheckBox chckbxHidePassword;
 	private JTextField textField_timeout;
 	private JTextField textField_timeoutPreview;
 	private JRadioButton rdbtnClose;
 	private JRadioButton rdbtnShutdown;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
+	public int timeoutChoice;
+	private JCheckBox chckboxTimoutEnabled;
 
 
-	public SetupFrame(String ip, String port) 
+	public SetupFrame(String port, boolean passHide, boolean timeoutEnabled, long timeout, int timeoutActionId) 
 	{
 		setTitle("Remote Shutdown Setup");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -81,7 +85,6 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		});
 		textField_port.setFont(new Font("Calibri", Font.PLAIN, 17));
 		textField_port.setColumns(7);
-		textField_port.addKeyListener(this);
 		panel_portconfig.add(textField_port);
 		if(port != null)
 			textField_port.setText(port);
@@ -98,11 +101,11 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		textField_password = new JTextField();
 		textField_password.setFont(new Font("Calibri", Font.PLAIN, 17));
 		textField_password.setColumns(12);
-		textField_password.addKeyListener(this);
 		panel_password.add(textField_password);
 		
 		chckbxHidePassword = new JCheckBox("Hide On Startup");
 		panel_password.add(chckbxHidePassword);
+		chckbxHidePassword.setSelected(passHide);
 		chckbxHidePassword.setHorizontalAlignment(SwingConstants.LEFT);
 		chckbxHidePassword.setFont(new Font("Calibri", Font.PLAIN, 16));
 		
@@ -115,13 +118,19 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		lblTimeout.setFont(new Font("Calibri", Font.BOLD, 17));
 		panel_timeout.add(lblTimeout);
 		
-		JCheckBox chckbxEnabled = new JCheckBox("Enabled");
-		chckbxEnabled.setFont(new Font("Calibri", Font.PLAIN, 16));
-		panel_timeout.add(chckbxEnabled);
+		chckboxTimoutEnabled = new JCheckBox("Enabled");
+		chckboxTimoutEnabled.setFont(new Font("Calibri", Font.PLAIN, 16));
+		chckboxTimoutEnabled.setSelected(timeoutEnabled);
+		chckboxTimoutEnabled.addItemListener(new TimeoutEnabledListener(chckboxTimoutEnabled));
+		panel_timeout.add(chckboxTimoutEnabled);
 		
 		textField_timeout = new JTextField();
 		textField_timeout.setFont(new Font("Calibri", Font.PLAIN, 17));
 		textField_timeout.setColumns(7);
+		textField_timeout.setEditable(timeoutEnabled);
+		textField_timeout.addKeyListener(new SetupListener(null,0));
+		if(timeout > 0)
+			textField_timeout.setText(timeout + "");
 		panel_timeout.add(textField_timeout);
 		
 		textField_timeoutPreview = new JTextField();
@@ -142,32 +151,56 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		rdbtnClose = new JRadioButton("Close Server");
 		buttonGroup.add(rdbtnClose);
 		rdbtnClose.setFont(new Font("Calibri", Font.PLAIN, 15));
+		SetupListener closeListener = new SetupListener(rdbtnClose,ID_CLOSE);
+		rdbtnClose.addItemListener(closeListener);
+		if(timeoutActionId == ID_CLOSE)
+			rdbtnClose.setSelected(true);
 		panel_aftertimeout.add(rdbtnClose);
 		
 		rdbtnShutdown = new JRadioButton("Shutdown PC");
 		buttonGroup.add(rdbtnShutdown);
 		rdbtnShutdown.setFont(new Font("Calibri", Font.PLAIN, 15));
+		SetupListener sdownListener = new SetupListener(rdbtnShutdown,ID_SHUTDOWN);
+		rdbtnShutdown.addItemListener(sdownListener);
+		if(timeoutActionId == ID_SHUTDOWN)
+			rdbtnShutdown.setSelected(true);
 		panel_aftertimeout.add(rdbtnShutdown);
 
-		JPanel panel_3 = new JPanel();
-		contentPane.add(panel_3, BorderLayout.SOUTH);
+		JPanel panel_start = new JPanel();
+		contentPane.add(panel_start, BorderLayout.SOUTH);
 
 		JLabel lblNewLabel_1 = new JLabel("Start RS Server");
 		lblNewLabel_1.setForeground(new Color(0, 0, 102));
 		lblNewLabel_1.setFont(new Font("Calibri", Font.BOLD, 21));
-		panel_3.add(lblNewLabel_1);
+		panel_start.add(lblNewLabel_1);
 
-		btnNewButton = new JButton("Go");
-		btnNewButton.setFont(new Font("Calibri", Font.PLAIN, 14));
-		btnNewButton.addActionListener(this);
-		panel_3.add(btnNewButton);
+		btnGo = new JButton("Go");
+		btnGo.setFont(new Font("Calibri", Font.PLAIN, 14));
+		btnGo.addActionListener(this);
+		panel_start.add(btnGo);
 	}
 
-
+	public void updateTimeoutPreview()
+	{
+		long millis;
+		try
+		{
+			String timeouttext = textField_timeout.getText();
+			millis = Long.parseLong(timeouttext);
+		}
+		catch (Exception ex)
+		{
+			textField_timeoutPreview.setText("Bad Formatting");
+			return;
+		}
+		String hms = ServerMain.millisToHMS(millis);
+		textField_timeoutPreview.setText(hms);
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) 
 	{
-		buttonPressed();
+		checkInputThenStartThread();
 
 	}
 
@@ -179,60 +212,53 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		try {
 			System.out.println(saveFile.getAbsolutePath());
 			saveFile.createNewFile();
-			TextFileHelper.writeTextToFile(saveFile, ClientMain.IP_PREFIX + textField_ip.getText(),ClientMain.PORT_PREFIX + textField_port.getText());
+			TextFileHelper.writeTextToFile(saveFile, 
+					ServerMain.PORT_PREFIX + textField_port.getText(),
+					ServerMain.HIDEPASS_PREFIX + chckbxHidePassword.isSelected(),
+					ServerMain.TIMEOUTENABLED_PREFIX + chckboxTimoutEnabled.isSelected(),
+					ServerMain.TIMEOUT_PREFIX + textField_timeout.getText(),
+					ServerMain.TIMEOUTACTION_PREFIX + timeoutChoice
+					);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		
+		
+		int port = Integer.parseInt(textField_port.getText());
+		String password = textField_password.getText();
+		int passLength = password.length();
+		boolean allowShowPassword = !chckbxHidePassword.isSelected();
+		long timeout = Long.parseLong(textField_timeout.getText());
+		boolean shutDownAfterTimeout = timeoutChoice == ID_SHUTDOWN;
 		PasswordCreator creator = new PasswordCreator();
-		String pass  = creator.createPassword(textField_password.getText());
-		RSClient client = null;
+		String pass = creator.createPassword(password);
+		
+		if (!allowShowPassword)
+			password = null;
+		ServerFrame frame = new ServerFrame(password, shutDownAfterTimeout, timeout, port, passLength);
+		RSServer server;
 		try {
-			client = new RSClient(textField_ip.getText(), Integer.parseInt(textField_port.getText()));
-
-		} catch (NumberFormatException e1) {
+			server = new RSServer(port,pass,frame);
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			e.printStackTrace();
 		}
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		client.sendMessage(pass);
-
+		frame.setVisible(true);
+		this.setVisible(false);
+		this.dispose();
 	}
 
 
-	@Override
-	public void keyPressed(KeyEvent e) 
+
+
+	private void checkInputThenStartThread() 
 	{
-		e.getComponent().setForeground(Color.BLACK);
-		if(e.getKeyCode() == KeyEvent.VK_ENTER)
-			buttonPressed();
-	
-
-	}
-
-
-	private void buttonPressed() 
-	{
-		boolean ip = textField_ip.getText().length() > 0;
 		boolean port = textField_port.getText().length() > 0;
 		boolean password = textField_password.getText().length() > 0;
-		if(!ip)
-		{
-			textField_ip.requestFocus();
-			Toolkit.getDefaultToolkit().beep();
-			return;
-		}
+		boolean timeoutDisabled = chckboxTimoutEnabled.isSelected() == false;
+		boolean timeoutAction = timeoutChoice != 0;
+		boolean timeoutOK = timeoutDisabled;
 		if(!port)
 		{
 			textField_port.requestFocus();
@@ -256,19 +282,81 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 			Toolkit.getDefaultToolkit().beep();
 			port = false;
 		}
-		if(ip && port && password)
+		if(!timeoutDisabled)
 		{
-			btnNewButton.setText("Sent!");
-			btnNewButton.setEnabled(false);
+			long timeout;
+			try
+			{
+				timeout = Long.parseLong(textField_timeout.getText());
+				if(timeout > 0)
+					timeoutOK = true;
+			}
+			catch(Exception ex)
+			{
+				
+			}
+		}
+		if(port && password && timeoutOK && timeoutAction)
+		{
+			btnGo.setText("Started");
+			btnGo.setEnabled(false);
 			new Thread(this).start();	
 		}
 	}
 
 
 	
+	private class TimeoutEnabledListener implements ItemListener
+	{
+		private JCheckBox chBox;
+		public TimeoutEnabledListener(JCheckBox box)
+		{
+			this.chBox = box;
+		}
+		@Override
+		public void itemStateChanged(ItemEvent arg0) 
+		{
+			if(chBox.isSelected())
+				textField_timeout.setEditable(true);	
+			else
+				textField_timeout.setEditable(false);
+		}
+		
+	}
 
-
-	private class
+	private class SetupListener implements ItemListener, KeyListener
+	{
+		private int id;
+		private JRadioButton button;
+		public SetupListener(JRadioButton button, int id)
+		{
+			this.button = button;
+			this.id = id;
+		}
+		public void itemStateChanged(ItemEvent arg0)
+		{
+			if(button.isSelected())
+				timeoutChoice = id;
+		}
+		@Override
+		public void keyPressed(KeyEvent arg0) 
+		{
+			updateTimeoutPreview();			
+		}
+		@Override
+		public void keyReleased(KeyEvent arg0) 
+		{
+			// TODO Auto-generated method stub
+			
+		}
+		@Override
+		public void keyTyped(KeyEvent arg0) {
+			// TODO Auto-generated method st
+			
+			
+		}
+		
+	}
 
 
 
