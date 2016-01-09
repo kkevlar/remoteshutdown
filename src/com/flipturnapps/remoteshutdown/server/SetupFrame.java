@@ -178,6 +178,7 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		btnGo.setFont(new Font("Calibri", Font.PLAIN, 14));
 		btnGo.addActionListener(this);
 		panel_start.add(btnGo);
+		updateTimeoutPreview();
 	}
 
 	public void updateTimeoutPreview()
@@ -190,7 +191,7 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		}
 		catch (Exception ex)
 		{
-			textField_timeoutPreview.setText("Bad Formatting");
+			textField_timeoutPreview.setText("Format!");
 			return;
 		}
 		String hms = ServerMain.millisToHMS(millis);
@@ -201,7 +202,6 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 	public void actionPerformed(ActionEvent e) 
 	{
 		checkInputThenStartThread();
-
 	}
 
 
@@ -320,6 +320,7 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 				textField_timeout.setEditable(true);	
 			else
 				textField_timeout.setEditable(false);
+			updateTimeoutPreview();
 		}
 		
 	}
@@ -337,16 +338,17 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		{
 			if(button.isSelected())
 				timeoutChoice = id;
+			updateTimeoutPreview();
 		}
 		@Override
 		public void keyPressed(KeyEvent arg0) 
 		{
-			updateTimeoutPreview();			
+			
 		}
 		@Override
 		public void keyReleased(KeyEvent arg0) 
 		{
-			// TODO Auto-generated method stub
+			updateTimeoutPreview();		
 			
 		}
 		@Override
