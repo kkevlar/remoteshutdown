@@ -5,6 +5,8 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
@@ -16,6 +18,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
+import com.flipturnapps.kevinLibrary.helper.FileHelper;
+import com.flipturnapps.kevinLibrary.helper.TextFileHelper;
 import com.flipturnapps.remoteshutdown.common.PasswordCreator;
 
 public class ClientFrame extends JFrame implements ActionListener 
@@ -25,9 +29,11 @@ public class ClientFrame extends JFrame implements ActionListener
 	private JTextField textField_ip;
 	private JTextField textField_port;
 	private JTextField textField_password;
+	private JButton btnNewButton;
 
 	
-	public ClientFrame() {
+	public ClientFrame(String ip, String port) 
+	{
 		setTitle("Remote Shutdown Client");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 373, 227);
@@ -53,6 +59,8 @@ public class ClientFrame extends JFrame implements ActionListener
 		textField_ip.setFont(new Font("Calibri", Font.PLAIN, 17));
 		panel_ipconfig.add(textField_ip);
 		textField_ip.setColumns(16);
+		if(ip != null)
+			textField_ip.setText(ip);
 		
 		JPanel panel_portconfig = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panel_portconfig.getLayout();
@@ -67,6 +75,8 @@ public class ClientFrame extends JFrame implements ActionListener
 		textField_port.setFont(new Font("Calibri", Font.PLAIN, 17));
 		textField_port.setColumns(7);
 		panel_portconfig.add(textField_port);
+		if(port != null)
+			textField_port.setText(port);
 		
 		JPanel panel_password = new JPanel();
 		FlowLayout flowLayout_1 = (FlowLayout) panel_password.getLayout();
@@ -89,7 +99,7 @@ public class ClientFrame extends JFrame implements ActionListener
 		lblNewLabel_1.setFont(new Font("Calibri", Font.BOLD, 19));
 		panel_3.add(lblNewLabel_1);
 		
-		JButton btnNewButton = new JButton("Go");
+		btnNewButton = new JButton("Go");
 		btnNewButton.addActionListener(this);
 		panel_3.add(btnNewButton);
 	}
@@ -121,7 +131,17 @@ public class ClientFrame extends JFrame implements ActionListener
 			e1.printStackTrace();
 		}
 		client.sendMessage(pass);
-		
+		btnNewButton.setEnabled(false);
+		File saveFile = ClientMain.getSaveFile();
+		try {
+			TextFileHelper.writeTextToFile(saveFile, ClientMain.IP_PREFIX + textField_ip.getText(),ClientMain.PORT_PREFIX + textField_port.getText());
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 	}
+
+
+	
 
 }
