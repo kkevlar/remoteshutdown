@@ -15,6 +15,8 @@ public class ClientMain
 	public static File getSaveFile()
 	{
 		String saveFileLocation = FileHelper.getAppDataDir("flipturnapps", "RemoteShutdown-Client");
+		File dir = new File(saveFileLocation);
+		dir.mkdirs();
 		File saveFile = new File(FileHelper.fileInDir(saveFileLocation, "prevconfig.txt"));
 		return saveFile;
 	}
