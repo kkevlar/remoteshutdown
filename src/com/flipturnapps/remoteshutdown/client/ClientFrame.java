@@ -1,24 +1,30 @@
 package com.flipturnapps.remoteshutdown.client;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.UnknownHostException;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
-import java.awt.Font;
-import java.awt.FlowLayout;
+import javax.swing.border.EmptyBorder;
 
-public class ClientFrame extends JFrame {
+import com.flipturnapps.remoteshutdown.common.PasswordCreator;
+
+public class ClientFrame extends JFrame implements ActionListener 
+{
 
 	private JPanel contentPane;
 	private JTextField textField_ip;
 	private JTextField textField_port;
-	private JTextField textField;
+	private JTextField textField_password;
 
 	
 	public ClientFrame() {
@@ -71,10 +77,10 @@ public class ClientFrame extends JFrame {
 		lblPassword.setFont(new Font("Calibri", Font.BOLD, 19));
 		panel_password.add(lblPassword);
 		
-		textField = new JTextField();
-		textField.setFont(new Font("Calibri", Font.PLAIN, 17));
-		textField.setColumns(15);
-		panel_password.add(textField);
+		textField_password = new JTextField();
+		textField_password.setFont(new Font("Calibri", Font.PLAIN, 17));
+		textField_password.setColumns(15);
+		panel_password.add(textField_password);
 		
 		JPanel panel_3 = new JPanel();
 		contentPane.add(panel_3, BorderLayout.SOUTH);
@@ -84,7 +90,30 @@ public class ClientFrame extends JFrame {
 		panel_3.add(lblNewLabel_1);
 		
 		JButton btnNewButton = new JButton("Go");
+		btnNewButton.addActionListener(this);
 		panel_3.add(btnNewButton);
+	}
+
+
+	@Override
+	public void actionPerformed(ActionEvent e) 
+	{
+		PasswordCreator creator = new PasswordCreator();
+		String pass  = creator.createPassword(textField_password.getText(), 0);
+		try {
+			RSClient client = new RSClient(textField_ip.getText(), Integer.parseInt(textField_port.getText()));
+			client.sendMessage(pass);
+		} catch (NumberFormatException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (UnknownHostException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 	}
 
 }
