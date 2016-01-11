@@ -85,6 +85,7 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		});
 		textField_port.setFont(new Font("Calibri", Font.PLAIN, 17));
 		textField_port.setColumns(7);
+		textField_port.addKeyListener(new EnterListener());
 		panel_portconfig.add(textField_port);
 		if(port != null)
 			textField_port.setText(port);
@@ -101,6 +102,7 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		textField_password = new JTextField();
 		textField_password.setFont(new Font("Calibri", Font.PLAIN, 17));
 		textField_password.setColumns(12);
+		textField_password.addKeyListener(new EnterListener());
 		panel_password.add(textField_password);
 		
 		chckbxHidePassword = new JCheckBox("Hide On Startup");
@@ -129,6 +131,7 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		textField_timeout.setColumns(7);
 		textField_timeout.setEditable(timeoutEnabled);
 		textField_timeout.addKeyListener(new SetupListener(null,0));
+		textField_timeout.addKeyListener(new EnterListener());
 		if(timeout > 0)
 			textField_timeout.setText(timeout + "");
 		panel_timeout.add(textField_timeout);
@@ -324,7 +327,29 @@ public class SetupFrame extends JFrame implements ActionListener, Runnable
 		}
 		
 	}
+	private class EnterListener implements KeyListener
+	{
 
+		@Override
+		public void keyPressed(KeyEvent e) {
+		if(e.getKeyCode() == e.VK_ENTER)
+			checkInputThenStartThread();
+			
+		}
+
+		@Override
+		public void keyReleased(KeyEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void keyTyped(KeyEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 	private class SetupListener implements ItemListener, KeyListener
 	{
 		private int id;
